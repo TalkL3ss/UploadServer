@@ -27,12 +27,12 @@ cd ./UploadServer
 
 ### **2️⃣ Install Dependencies**
 Run the installation script:
-chmod +x install_prereq.sh
+chmod +x install_prereq.sh;
 ./install_prereq.sh
 
 ### **3️⃣ Start the Servers**
 Start both **WebSocket PHP server** and **Python HTTP server**:
-chmod +x start_servers.sh
+chmod +x start_servers.sh;
 ./start_servers.sh
 
 ### **4️⃣ Access the Website**
@@ -43,8 +43,8 @@ http://YOUR_MACHINE_IP:8000
 
 ## 🛑 Stopping the Servers
 To stop both the **WebSocket PHP server** and the **Python HTTP server**, run:
-chmod +x stop_servers.sh
-./stop_servers.sh
+chmod +x kill-servers.sh;
+./kill-server.sh
 ---
 
 ## 📂 File Upload & Download
