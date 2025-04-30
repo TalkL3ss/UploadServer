@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker Upload Portal</title>
+    <style>
+        body {
+            background-color: black;
+            color: limegreen;
+            font-family: "Courier New", Courier, monospace;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 0 0 10px limegreen;
+        }
+        #fileInput, button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            font-size: 16px;
+            background-color: black;
+            color: limegreen;
+            border: 1px solid limegreen;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button:hover {
+            background-color: limegreen;
+            color: black;
+            cursor: pointer;
+        }
+        #status {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            text-shadow: 0 0 5px limegreen;
+        }
+        #fileList {
+            text-align: center;
+            list-style: none;
+            padding: 0;
+        }
+        #fileList li {
+            padding: 5px;
+            border-bottom: 1px solid limegreen;
+        }
+        #fileList button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Hacker Upload Portal</h2>
+    <input type="file" id="fileInput">
+    <button onclick="sendFile()">Upload</button>
+    <button onclick="getFiles()">Show Uploaded Files</button>
+    <p id="status"></p>
+    <ul id="fileList"></ul>
+
+    <script>
+        const ws = new WebSocket("ws://172.25.167.44:8080");
+
+        ws.onopen = function () {
+            console.log("Connected to WebSocket server.");
+            document.getElementById("status").innerText = "Connected!";
+        };
+
+        ws.onerror = function (error) {
+            console.error("WebSocket error:", error);
+        };
+
+        ws.onmessage = function (event) {
+            const response = JSON.parse(event.data);
+            
+            if (response.files) {
+                const fileList = document.getElementById("fileList");
+                fileList.innerHTML = ""; // Clear previous entries
+                
+                response.files.forEach(file => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `${file} <button onclick="downloadFile('${file}')">Download</button>`;
+                    fileList.appendChild(li);
+                });
+            } else if (response.filedata) {
+                // Handle file download
+                const link = document.createElement("a");
+                link.href = "data:application/octet-stream;base64," + response.filedata;
+                link.download = response.filename;
+                link.click();
+            } else {
+                document.getElementById("status").innerText = response.message;
+            }
+        };
+
+        function sendFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function () {
+                ws.send(JSON.stringify({
+                    filename: file.name,
+                    filedata: btoa(reader.result) // Convert binary to base64 for sending
+                }));
+            };
+
+            reader.readAsBinaryString(file);
+        }
+
+        function getFiles() {
+            ws.send(JSON.stringify({ action: "get_files" }));
+        }
+
+        function downloadFile(filename) {
+            ws.send(JSON.stringify({ action: "download_file", filename: filename }));
+        }
+    </script>
+</body>
+</html>
+
