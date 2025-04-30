@@ -52,7 +52,7 @@ cd "$SCRIPT_DIR"
 # Initialize Composer project in silent mode with default values
 if [ ! -f "composer.json" ]; then
     echo "Initializing Composer project with default values..."
-    composer init --name=default/UploadServer --description="" --author="TalkL3ss" --type="" --license="MIT" -n
+    composer init --name=default/uploadserver --description="" --author="TalkL3ss" --type="" --license="MIT" -n
 fi
 
 # Require cboden/ratchet library
