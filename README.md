@@ -12,8 +12,7 @@ Users can **upload, view, and download files** through an interactive web interf
 
 ## 🚀 Features
 ✔️ Upload files via WebSocket  
-✔️ View uploaded files  
-✔️ Download files dynamically  
+✔️ Password-protected WebSocket server  
 ✔️ Interactive UI  
 
 ---
@@ -21,41 +20,47 @@ Users can **upload, view, and download files** through an interactive web interf
 ## 🔧 Installation & Setup
 
 ### **1️⃣ Clone the Repository**
+```bash
 git clone https://github.com/TalkL3ss/UploadServer.git
 cd ./UploadServer
-
+```
 
 ### **2️⃣ Install Dependencies**
 Run the installation script:
-chmod +x install_prereq.sh;
+```bash
+chmod +x install_prereq.sh
 ./install_prereq.sh
+```
+
+During installation, you will be prompted to set a password for the WebSocket server. If you leave it blank, the default password (`securepassword`) will be used.
 
 ### **3️⃣ Start the Servers**
 Start both **WebSocket PHP server** and **Python HTTP server**:
-chmod +x start_servers.sh;
+```bash
+chmod +x start_servers.sh
 ./start_servers.sh
-
-### **4️⃣ Access the Website**
-Once the servers are running, open:
-http://YOUR_MACHINE_IP:8000
+```
 
 ---
 
 ### 🛑 Stopping the Servers
-To stop both the **WebSocket PHP server** and the **Python HTTP server**
-run: 
-chmod +x kill-servers.sh;
-./kill-server.sh
+To stop the servers, run:
+```bash
+chmod +x kill-servers.sh
+./kill-servers.sh
+```
+
 ---
 
-## 📂 File Upload & Download
-✔️ **Upload:** Select a file and press **Upload**  
-✔️ **View Files:** Click **Show Uploaded Files**  
-✔️ **Download:** Click **Download** next to a file  
+## 📂 Usage
+✔️ **Upload:** Select a file, enter the password, and click **Upload**.  
+✔️ **View Files:** Click **Show Uploaded Files**.  
+✔️ **Download:** Click **Download** next to a file.  
 
-All uploaded files are stored in:
+Default uploads directory:
+```
 uploads/
-
+```
 
 ---
 
@@ -63,15 +68,3 @@ uploads/
 - **PHP** (WebSocket Server via Ratchet)
 - **Python** (HTTP Server)
 - **JavaScript & HTML** (Client-side UI)
-
----
-
-## 💡 Future Improvements
-🔹 Multi-file upload support  
-🔹 Progress tracking for uploads  
-🔹 Secure login system  
-
----
-
-## 👨‍💻 Author
-Created by **Bing AI**
