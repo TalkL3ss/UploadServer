@@ -41,8 +41,9 @@ http://YOUR_MACHINE_IP:8000
 
 ---
 
-## 🛑 Stopping the Servers
-To stop both the **WebSocket PHP server** and the **Python HTTP server**, run:
+### 🛑 Stopping the Servers
+To stop both the **WebSocket PHP server** and the **Python HTTP server**
+run: 
 chmod +x kill-servers.sh;
 ./kill-server.sh
 ---
