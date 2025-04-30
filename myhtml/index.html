@@ -4,6 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload</title>
+    <style>
+        body {
+            background-color: black; /* Black background */
+            color: neon-green; /* Green text */
+            font-family: 'Courier New', Courier, monospace; /* Monospace font */
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-top: 20px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+!``
+```html
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        form {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        input, button {
+            font-size: 1rem;
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #333;
+            color: neon-green;
+        }
+
+        input[type="file"] {
+            color: neon-green;
+        }
+
+        #response {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        /* Scrolling text animation */
+        @keyframes scroll {
+            0% { transform: translateY(100%); }
+            100% { transform: translateY(-100%); }
+        }
+
+        #scrollingText {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            animation: scroll 10s linear infinite;
+            color: neon-green;
+        }
+    </style>
 </head>
 <body>
     <h1>File Upload</h1>
@@ -17,7 +81,7 @@
         <button type="submit">Upload</button>
     </form>
     <div id="response"></div>
-
+    <div id="scrollingText">Welcome to the Hacker Interface!</div>
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
