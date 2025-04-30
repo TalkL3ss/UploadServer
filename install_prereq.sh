@@ -35,7 +35,10 @@ fi
 SERVER_FILE="$SCRIPT_DIR/server.php"
 if [ -f "$SERVER_FILE" ]; then
     echo "Setting password in server.php..."
-    sed -i "s/private \$password = .*/private \$password = \"$USER_PASSWORD\";/" "$SERVER_FILE"
+    if ! sed -i "s/private \$password = .*/private \$password = \"$USER_PASSWORD\";/" "$SERVER_FILE"; then
+        echo "Error: Failed to set the password in server.php. Please check the file."
+        exit 1
+    fi
 else
     echo "Warning: server.php not found. Ensure the password is set manually."
 fi
