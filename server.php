@@ -5,6 +5,7 @@ use Ratchet\ConnectionInterface;
 require 'vendor/autoload.php';
 
 class FileServer implements MessageComponentInterface {
+    private $password = "securepassword"; // Default password
     protected $clients;
 
     public function __construct() {
@@ -13,10 +14,17 @@ class FileServer implements MessageComponentInterface {
 
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
+        echo "New connection ({$conn->resourceId}) opened.\n";
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = json_decode($msg, true);
+
+        // Validate password
+        if (!isset($data['password']) || $data['password'] !== $this->password) {
+            $from->send(json_encode(["status" => "error", "message" => "Invalid password."]));
+            return;
+        }
 
         if (isset($data['action'])) {
             if ($data['action'] === "get_files") {
@@ -49,10 +57,11 @@ class FileServer implements MessageComponentInterface {
 
     public function onClose(ConnectionInterface $conn) {
         $this->clients->detach($conn);
+        echo "Connection {$conn->resourceId} has disconnected.\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
-        echo "Error: " . $e->getMessage();
+        echo "Error: " . $e->getMessage() . "\n";
         $conn->close();
     }
 }
@@ -73,4 +82,3 @@ $server = IoServer::factory(
 echo "WebSocket server started on port 8080...\n";
 $server->run();
 ?>
-
