@@ -22,7 +22,7 @@ Users can **upload, view, and download files** through an interactive web interf
 
 ### **1️⃣ Clone the Repository**
 git clone https://github.com/TalkL3ss/UploadServer.git
-cd YOUR_REPOSITORY
+cd ./UploadServer
 
 
 ### **2️⃣ Install Dependencies**
