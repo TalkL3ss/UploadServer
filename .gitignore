@@ -1,0 +1,21 @@
+# Composer dependencies
+vendor/
+composer.lock
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+*.log
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
