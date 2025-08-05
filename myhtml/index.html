@@ -7,7 +7,7 @@
     <style>
         body {
             background-color: black; /* Black background */
-            color: neon-green; /* Green text */
+            color: #00ff00; /* Green text */
             font-family: 'Courier New', Courier, monospace; /* Monospace font */
             margin: 0;
             padding: 0;
@@ -28,9 +28,25 @@
             100% { opacity: 1; }
         }
 
+        #uploadSection, #browserSection {
+            margin: 30px auto;
+            max-width: 90%;
+            text-align: center;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #00ff00;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
         form {
             text-align: center;
-            margin-top: 50px;
+            margin-top: 20px;
         }
 
         input, button {
@@ -40,17 +56,46 @@
             border: none;
             border-radius: 5px;
             background: #333;
-            color: neon-green;
+            color: #00ff00;
+            border: 1px solid #00ff00;
         }
 
         input[type="file"] {
-            color: neon-green;
+            color: #00ff00;
+        }
+
+        input[type="url"] {
+            width: 300px;
+        }
+
+        button:hover {
+            background: #00ff00;
+            color: black;
+            cursor: pointer;
         }
 
         #response {
             margin-top: 20px;
             text-align: center;
             font-size: 1.2rem;
+        }
+
+        #browserControls {
+            margin-bottom: 20px;
+        }
+
+        #browserFrame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #webBrowser {
+            width: 100%;
+            height: 100%;
+            background: white;
         }
 
         /* Scrolling text animation */
@@ -65,24 +110,43 @@
             width: 100%;
             text-align: center;
             animation: scroll 10s linear infinite;
-            color: neon-green;
+            color: #00ff00;
         }
     </style>
 </head>
 <body>
-    <h1>File Upload</h1>
-    <form id="uploadForm">
-        <label for="password">Password:</label>
-        <input type="password" id="password" required>
-        <br><br>
-        <label for="fileInput">Choose a file:</label>
-        <input type="file" id="fileInput" required>
-        <br><br>
-        <button type="submit">Upload</button>
-    </form>
-    <div id="response"></div>
-    <div id="scrollingText">Welcome to the Hacker Interface!</div>
+    <h1>File Upload & Web Browser</h1>
+    
+    <!-- File Upload Section -->
+    <div id="uploadSection">
+        <h2>📁 File Upload</h2>
+        <form id="uploadForm">
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+            <br><br>
+            <label for="fileInput">Choose a file:</label>
+            <input type="file" id="fileInput" required>
+            <br><br>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="response"></div>
+    </div>
+
+    <!-- Web Browser Section -->
+    <div id="browserSection">
+        <h2>🌐 Web Browser</h2>
+        <div id="browserControls">
+            <input type="url" id="urlInput" placeholder="Enter URL (e.g., https://example.com)" value="https://example.com">
+            <button onclick="browseUrl()">Browse</button>
+            <button onclick="goHome()">Example.com</button>
+        </div>
+        <div id="browserFrame">
+            <iframe id="webBrowser" src="https://example.com" frameborder="0"></iframe>
+        </div>
+    </div>
+    <div id="scrollingText">Welcome to the Hacker Interface! Upload files or browse the web!</div>
     <script>
+        // File upload functionality
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('fileInput');
@@ -109,6 +173,70 @@
                 };
             };
             reader.readAsDataURL(file);
+        });
+
+        // Browser functionality
+        function browseUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const webBrowser = document.getElementById('webBrowser');
+            let url = urlInput.value.trim();
+            
+            // Add https:// if no protocol specified
+            if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+                urlInput.value = url;
+            }
+            
+            if (url) {
+                // Try to load in iframe first
+                webBrowser.src = url;
+                
+                // Also provide option to open in new tab
+                setTimeout(() => {
+                    const response = document.getElementById('response');
+                    response.innerHTML = `
+                        <div style="margin-top: 20px;">
+                            <span style="color: #00ff00;">📄 Loading: ${url}</span><br>
+                            <small style="color: #888;">If the page doesn't load below due to security restrictions,</small><br>
+                            <button onclick="window.open('${url}', '_blank')" style="margin-top: 10px; background: #00ff00; color: black;">
+                                🔗 Open in New Tab
+                            </button>
+                        </div>
+                    `;
+                }, 1000);
+            } else {
+                alert('Please enter a valid URL');
+            }
+        }
+
+        function goHome() {
+            const urlInput = document.getElementById('urlInput');
+            const webBrowser = document.getElementById('webBrowser');
+            const homeUrl = 'https://example.com';
+            
+            urlInput.value = homeUrl;
+            webBrowser.src = homeUrl;
+            
+            // Provide new tab option for example.com
+            setTimeout(() => {
+                const response = document.getElementById('response');
+                response.innerHTML = `
+                    <div style="margin-top: 20px;">
+                        <span style="color: #00ff00;">📄 Loading Example.com</span><br>
+                        <small style="color: #888;">If the page doesn't load below due to security restrictions,</small><br>
+                        <button onclick="window.open('https://example.com', '_blank')" style="margin-top: 10px; background: #00ff00; color: black;">
+                            🔗 Open Example.com in New Tab
+                        </button>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        // Allow Enter key to browse URL
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                browseUrl();
+            }
         });
     </script>
 </body>
