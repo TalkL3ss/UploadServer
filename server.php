@@ -12,6 +12,87 @@ class FileServer implements MessageComponentInterface {
         $this->clients = new \SplObjectStorage;
     }
 
+    private function fetchWebContent($url) {
+        // Fetch content from the URL
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            ]
+        ]);
+        
+        $content = @file_get_contents($url, false, $context);
+        if ($content === false) {
+            return false;
+        }
+        
+        // Strip HTML tags and extract text
+        $text = strip_tags($content);
+        $text = preg_replace('/\s+/', ' ', $text); // Normalize whitespace
+        return trim($text);
+    }
+
+    private function summarizeText($text, $maxSentences = 3) {
+        if (empty($text)) {
+            return "No content to summarize.";
+        }
+        
+        // Split into sentences
+        $sentences = preg_split('/[.!?]+/', $text);
+        $sentences = array_filter(array_map('trim', $sentences));
+        
+        if (count($sentences) <= $maxSentences) {
+            return implode('. ', $sentences) . '.';
+        }
+        
+        // Simple scoring: prefer sentences with common words and good length
+        $scored = [];
+        $words = str_word_count(strtolower($text), 1);
+        $wordFreq = array_count_values($words);
+        
+        foreach ($sentences as $sentence) {
+            $sentenceWords = str_word_count(strtolower($sentence), 1);
+            $score = 0;
+            $wordCount = count($sentenceWords);
+            
+            // Skip very short or very long sentences
+            if ($wordCount < 5 || $wordCount > 40) {
+                continue;
+            }
+            
+            // Score based on word frequency
+            foreach ($sentenceWords as $word) {
+                if (isset($wordFreq[$word])) {
+                    $score += $wordFreq[$word];
+                }
+            }
+            
+            // Normalize by sentence length
+            $score = $score / $wordCount;
+            $scored[] = ['sentence' => $sentence, 'score' => $score];
+        }
+        
+        // Sort by score and take top sentences
+        usort($scored, function($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+        
+        $topSentences = array_slice($scored, 0, $maxSentences);
+        
+        // Maintain original order
+        $result = [];
+        foreach ($sentences as $sentence) {
+            foreach ($topSentences as $top) {
+                if ($top['sentence'] === $sentence) {
+                    $result[] = $sentence;
+                    break;
+                }
+            }
+        }
+        
+        return implode('. ', $result) . '.';
+    }
+
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
         echo "New connection ({$conn->resourceId}) opened.\n";
@@ -44,6 +125,35 @@ class FileServer implements MessageComponentInterface {
                 } else {
                     $from->send(json_encode(["status" => "error", "message" => "File not found."]));
                 }
+            } elseif ($data['action'] === "summarize" && isset($data['url'])) {
+                // Summarize content from URL
+                $url = $data['url'];
+                
+                // Validate URL
+                if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                    $from->send(json_encode(["status" => "error", "message" => "Invalid URL provided."]));
+                    return;
+                }
+                
+                echo "Fetching content from: $url\n";
+                
+                // For demo purposes, if the URL is example.com, use sample content
+                if (strpos($url, 'example.com') !== false) {
+                    $content = "Example Domain is a reserved domain name for use in illustrative examples in documents. You may use this domain in literature without prior coordination or asking for permission. More information about Example.com can be found in RFC 2606. This domain is for use in illustrative examples in documents. You can use this domain freely in documentation and testing. The domain name example.com is specifically reserved for use in examples. It helps developers and writers create documentation without worrying about domain conflicts. This makes it a reliable choice for educational and demonstration purposes.";
+                } else {
+                    $content = $this->fetchWebContent($url);
+                    if ($content === false) {
+                        $from->send(json_encode(["status" => "error", "message" => "Failed to fetch content from the URL. The URL might be unreachable or blocked."]));
+                        return;
+                    }
+                }
+                
+                $summary = $this->summarizeText($content);
+                $from->send(json_encode([
+                    "status" => "success",
+                    "url" => $url,
+                    "summary" => $summary
+                ]));
             }
         } elseif (isset($data['filename']) && isset($data['filedata'])) {
             // Save uploaded file

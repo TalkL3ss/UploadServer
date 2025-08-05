@@ -20,6 +20,13 @@
             animation: blink 1s infinite;
         }
 
+        h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 30px;
+            color: neon-green;
+        }
+
         @keyframes blink {
 !``
 ```html
@@ -51,6 +58,11 @@
             margin-top: 20px;
             text-align: center;
             font-size: 1.2rem;
+            padding: 15px;
+            background: #111;
+            border-radius: 5px;
+            min-height: 50px;
+            border: 1px solid #333;
         }
 
         /* Scrolling text animation */
@@ -70,7 +82,9 @@
     </style>
 </head>
 <body>
-    <h1>File Upload</h1>
+    <h1>File Upload & Website Summarizer</h1>
+    
+    <!-- File Upload Section -->
     <form id="uploadForm">
         <label for="password">Password:</label>
         <input type="password" id="password" required>
@@ -80,6 +94,19 @@
         <br><br>
         <button type="submit">Upload</button>
     </form>
+    
+    <!-- Website Summarizer Section -->
+    <form id="summarizeForm">
+        <h2>Website Summarizer</h2>
+        <label for="summarizePassword">Password:</label>
+        <input type="password" id="summarizePassword" required>
+        <br><br>
+        <label for="urlInput">Website URL:</label>
+        <input type="url" id="urlInput" placeholder="https://example.com" required>
+        <br><br>
+        <button type="submit">Summarize</button>
+    </form>
+    
     <div id="response"></div>
     <div id="scrollingText">Welcome to the Hacker Interface!</div>
     <script>
@@ -101,14 +128,76 @@
                     ws.send(JSON.stringify({
                         password: password,
                         filename: file.name,
-                        file: reader.result.split(',')[1] // Remove Base64 header
+                        filedata: reader.result.split(',')[1] // Remove Base64 header
                     }));
                 };
                 ws.onmessage = (event) => {
-                    document.getElementById('response').innerText = event.data;
+                    const response = JSON.parse(event.data);
+                    if (response.status === 'success') {
+                        document.getElementById('response').innerHTML = `<span style="color: green;">✅ ${response.message}</span>`;
+                    } else {
+                        document.getElementById('response').innerHTML = `<span style="color: red;">❌ ${response.message}</span>`;
+                    }
+                };
+                ws.onerror = () => {
+                    document.getElementById('response').innerHTML = '<span style="color: red;">❌ WebSocket connection failed</span>';
                 };
             };
             reader.readAsDataURL(file);
+        });
+
+        // Website Summarizer Form Handler
+        document.getElementById('summarizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('Summarize form submitted');
+            
+            const password = document.getElementById('summarizePassword').value;
+            const url = document.getElementById('urlInput').value;
+
+            if (!password || !url) {
+                alert('Please provide both password and URL');
+                return;
+            }
+
+            console.log('Connecting to WebSocket...');
+            document.getElementById('response').innerHTML = '<span style="color: yellow;">🔄 Fetching and summarizing content...</span>';
+
+            const ws = new WebSocket('ws://localhost:8080');
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected, sending request');
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: 'summarize',
+                    url: url
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                console.log('Received response:', event.data);
+                const response = JSON.parse(event.data);
+                if (response.status === 'success') {
+                    document.getElementById('response').innerHTML = `
+                        <div style="color: green; margin-top: 20px;">
+                            <h3>✅ Summary for: ${response.url}</h3>
+                            <p style="background: #222; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+                                ${response.summary}
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('response').innerHTML = `<span style="color: red;">❌ ${response.message}</span>`;
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('response').innerHTML = '<span style="color: red;">❌ WebSocket connection failed</span>';
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
         });
     </script>
 </body>
