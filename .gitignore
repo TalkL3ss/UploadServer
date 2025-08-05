@@ -1,0 +1,17 @@
+# Dependencies
+vendor/
+composer.lock
+
+# Log files
+*.log
+
+# Process ID files
+*.pid
+
+# Uploads directory contents (keep the directory structure)
+uploads/*
+!uploads/.gitkeep
+
+# Temporary files
+.tmp/
+/tmp/
