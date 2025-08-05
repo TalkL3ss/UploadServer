@@ -80,6 +80,11 @@
         <br><br>
         <button type="submit">Upload</button>
     </form>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <button id="browseNgrokBtn" type="button">Browse to Ngrok with Directory Listing</button>
+    </div>
+    
     <div id="response"></div>
     <div id="scrollingText">Welcome to the Hacker Interface!</div>
     <script>
@@ -109,6 +114,41 @@
                 };
             };
             reader.readAsDataURL(file);
+        });
+
+        // Handle ngrok browse button
+        document.getElementById('browseNgrokBtn').addEventListener('click', async () => {
+            const password = document.getElementById('password').value;
+            
+            if (!password) {
+                alert('Please enter the password first');
+                return;
+            }
+            
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: "browse_ngrok"
+                }));
+            };
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                if (response.status === "success") {
+                    document.getElementById('response').innerHTML = 
+                        `<strong>Success!</strong><br>
+                         URL: ${response.url}<br>
+                         Response: ${response.response || 'Request completed'}`;
+                } else {
+                    document.getElementById('response').innerHTML = 
+                        `<strong>Error:</strong> ${response.message}<br>
+                         URL: ${response.url || 'N/A'}`;
+                }
+                ws.close();
+            };
+            ws.onerror = () => {
+                document.getElementById('response').innerText = 'WebSocket connection failed';
+            };
         });
     </script>
 </body>
