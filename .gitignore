@@ -1,0 +1,25 @@
+# Composer dependencies
+vendor/
+composer.lock
+
+# Uploads directory (files should not be committed)
+uploads/*
+!uploads/.gitkeep
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+*~
