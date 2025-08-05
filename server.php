@@ -28,10 +28,31 @@ class FileServer implements MessageComponentInterface {
 
         if (isset($data['action'])) {
             if ($data['action'] === "get_files") {
-                // Get list of uploaded files
+                // Get list of uploaded files with detailed information (like ls -ltra)
                 $files = glob('uploads/*');
-                $fileNames = array_map('basename', $files);
-                $from->send(json_encode(["status" => "success", "files" => $fileNames]));
+                $fileDetails = [];
+                
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        $stat = stat($file);
+                        $fileDetails[] = [
+                            'name' => basename($file),
+                            'size' => $stat['size'],
+                            'mtime' => $stat['mtime'],
+                            'mtime_formatted' => date('M d H:i', $stat['mtime']),
+                            'permissions' => substr(sprintf('%o', fileperms($file)), -4),
+                            'readable' => is_readable($file),
+                            'writable' => is_writable($file)
+                        ];
+                    }
+                }
+                
+                // Sort by modification time (oldest first, like ls -ltra)
+                usort($fileDetails, function($a, $b) {
+                    return $a['mtime'] <=> $b['mtime'];
+                });
+                
+                $from->send(json_encode(["status" => "success", "files" => $fileDetails]));
             } elseif ($data['action'] === "download_file" && isset($data['filename'])) {
                 $filePath = 'uploads/' . basename($data['filename']);
                 if (file_exists($filePath)) {

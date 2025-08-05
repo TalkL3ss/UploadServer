@@ -1,0 +1,14 @@
+{
+    "name": "uploadserver/test",
+    "description": "Test project",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Test"
+        }
+    ],
+    "require": {
+        "cboden/ratchet": "*"
+    }
+}
