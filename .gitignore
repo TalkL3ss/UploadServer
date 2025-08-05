@@ -1,0 +1,22 @@
+# Composer dependencies
+vendor/
+composer.lock
+
+# PHP logs
+*.log
+
+# Server PID files
+*.pid
+
+# Uploads directory (runtime files)
+uploads/*
+!uploads/.gitkeep
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
