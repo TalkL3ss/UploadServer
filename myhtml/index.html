@@ -67,6 +67,27 @@
             animation: scroll 10s linear infinite;
             color: neon-green;
         }
+
+        table {
+            color: neon-green;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        th, td {
+            color: neon-green;
+        }
+
+        button {
+            background: #333;
+            color: neon-green;
+            border: 1px solid neon-green;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: neon-green;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -80,7 +101,13 @@
         <br><br>
         <button type="submit">Upload</button>
     </form>
+    
+    <div style="margin-top: 30px;">
+        <button onclick="listFiles()">Show Uploaded Files</button>
+    </div>
+    
     <div id="response"></div>
+    <div id="fileList" style="margin-top: 20px;"></div>
     <div id="scrollingText">Welcome to the Hacker Interface!</div>
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
@@ -101,15 +128,105 @@
                     ws.send(JSON.stringify({
                         password: password,
                         filename: file.name,
-                        file: reader.result.split(',')[1] // Remove Base64 header
+                        filedata: reader.result.split(',')[1] // Remove Base64 header
                     }));
                 };
                 ws.onmessage = (event) => {
-                    document.getElementById('response').innerText = event.data;
+                    const response = JSON.parse(event.data);
+                    document.getElementById('response').innerText = response.message || 'Upload completed!';
                 };
             };
             reader.readAsDataURL(file);
         });
+
+        function listFiles() {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                alert('Please enter password first');
+                return;
+            }
+
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: "get_files"
+                }));
+            };
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                if (response.status === "success") {
+                    displayFileList(response.files);
+                } else {
+                    document.getElementById('fileList').innerHTML = '<p style="color: red;">Error: ' + response.message + '</p>';
+                }
+            };
+        }
+
+        function displayFileList(files) {
+            const fileListDiv = document.getElementById('fileList');
+            if (files.length === 0) {
+                fileListDiv.innerHTML = '<p>No files uploaded yet.</p>';
+                return;
+            }
+
+            let html = '<h3>Uploaded Files (like ls -ltra):</h3>';
+            html += '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+            html += '<tr style="border-bottom: 1px solid #333;"><th style="text-align: left; padding: 5px;">Permissions</th><th style="text-align: left; padding: 5px;">Size</th><th style="text-align: left; padding: 5px;">Date</th><th style="text-align: left; padding: 5px;">Name</th><th style="text-align: left; padding: 5px;">Action</th></tr>';
+            
+            files.forEach(file => {
+                html += '<tr style="border-bottom: 1px solid #333;">';
+                html += '<td style="padding: 5px;">' + file.permissions + '</td>';
+                html += '<td style="padding: 5px;">' + formatFileSize(file.size) + '</td>';
+                html += '<td style="padding: 5px;">' + file.mtime_formatted + '</td>';
+                html += '<td style="padding: 5px;">' + file.name + '</td>';
+                html += '<td style="padding: 5px;"><button onclick="downloadFile(\'' + file.name + '\')">Download</button></td>';
+                html += '</tr>';
+            });
+            html += '</table>';
+            fileListDiv.innerHTML = html;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function downloadFile(filename) {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                alert('Please enter password first');
+                return;
+            }
+
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: "download_file",
+                    filename: filename
+                }));
+            };
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                if (response.status === "success") {
+                    const blob = new Blob([atob(response.filedata)], { type: 'application/octet-stream' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    alert('Error downloading file: ' + response.message);
+                }
+            };
+        }
     </script>
 </body>
 </html>
