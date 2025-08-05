@@ -28,10 +28,19 @@ class FileServer implements MessageComponentInterface {
 
         if (isset($data['action'])) {
             if ($data['action'] === "get_files") {
-                // Get list of uploaded files
+                // Get list of uploaded files with details
                 $files = glob('uploads/*');
-                $fileNames = array_map('basename', $files);
-                $from->send(json_encode(["status" => "success", "files" => $fileNames]));
+                $fileDetails = [];
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        $fileDetails[] = [
+                            'name' => basename($file),
+                            'size' => filesize($file),
+                            'modified' => filemtime($file)
+                        ];
+                    }
+                }
+                $from->send(json_encode(["status" => "success", "files" => $fileDetails]));
             } elseif ($data['action'] === "download_file" && isset($data['filename'])) {
                 $filePath = 'uploads/' . basename($data['filename']);
                 if (file_exists($filePath)) {

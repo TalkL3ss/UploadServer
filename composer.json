@@ -1,0 +1,14 @@
+{
+    "name": "default/uploadserver",
+    "description": "Upload Server",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "TalkL3ss"
+        }
+    ],
+    "require": {
+        "cboden/ratchet": "*"
+    }
+}

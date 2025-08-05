@@ -79,8 +79,10 @@
         <input type="file" id="fileInput" required>
         <br><br>
         <button type="submit">Upload</button>
+        <button type="button" id="showFilesBtn">Show Uploaded Files</button>
     </form>
     <div id="response"></div>
+    <div id="filesList" style="margin-top: 20px; text-align: center;"></div>
     <div id="scrollingText">Welcome to the Hacker Interface!</div>
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
@@ -101,7 +103,7 @@
                     ws.send(JSON.stringify({
                         password: password,
                         filename: file.name,
-                        file: reader.result.split(',')[1] // Remove Base64 header
+                        filedata: reader.result.split(',')[1] // Remove Base64 header
                     }));
                 };
                 ws.onmessage = (event) => {
@@ -110,6 +112,114 @@
             };
             reader.readAsDataURL(file);
         });
+
+        // Show uploaded files functionality
+        document.getElementById('showFilesBtn').addEventListener('click', () => {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                alert('Please enter password first');
+                return;
+            }
+
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: 'get_files'
+                }));
+            };
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                const filesList = document.getElementById('filesList');
+                
+                if (response.status === 'success' && response.files) {
+                    if (response.files.length === 0) {
+                        filesList.innerHTML = '<p style="color: #00ff00;">No files uploaded yet.</p>';
+                    } else {
+                        let filesHtml = '<h2 style="color: #00ff00;">Uploaded Files:</h2><ul style="list-style: none; padding: 0;">';
+                        response.files.forEach(file => {
+                            const fileName = typeof file === 'string' ? file : file.name;
+                            const fileSize = typeof file === 'object' ? formatFileSize(file.size) : '';
+                            const fileDate = typeof file === 'object' ? new Date(file.modified * 1000).toLocaleString() : '';
+                            
+                            filesHtml += `
+                                <li style="margin: 10px 0; padding: 15px; background: #333; border-radius: 5px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="color: #00ff00; font-weight: bold;">${fileName}</div>
+                                            ${fileSize ? `<div style="color: #888; font-size: 0.9em;">Size: ${fileSize}</div>` : ''}
+                                            ${fileDate ? `<div style="color: #888; font-size: 0.9em;">Modified: ${fileDate}</div>` : ''}
+                                        </div>
+                                        <button onclick="downloadFile('${fileName}')" style="padding: 8px 15px; background: #555; color: #00ff00; border: none; border-radius: 3px; cursor: pointer;">Download</button>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                        filesHtml += '</ul>';
+                        filesList.innerHTML = filesHtml;
+                    }
+                } else {
+                    filesList.innerHTML = `<p style="color: #ff0000;">Error: ${response.message || 'Failed to get files'}</p>`;
+                }
+                ws.close();
+            };
+        });
+
+        // Download file functionality
+        function downloadFile(filename) {
+            const password = document.getElementById('password').value;
+            if (!password) {
+                alert('Please enter password first');
+                return;
+            }
+
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    password: password,
+                    action: 'download_file',
+                    filename: filename
+                }));
+            };
+            ws.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                if (response.status === 'success' && response.filedata) {
+                    // Create a download link
+                    const blob = base64ToBlob(response.filedata);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert(`Error: ${response.message || 'Failed to download file'}`);
+                }
+                ws.close();
+            };
+        }
+
+        // Helper function to convert base64 to blob
+        function base64ToBlob(base64) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray]);
+        }
+
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
     </script>
 </body>
 </html>
