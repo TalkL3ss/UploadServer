@@ -1,0 +1,13 @@
+# Composer dependencies
+vendor/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.pid
+
+# Uploads directory (user files)
+uploads/*
+!uploads/.gitkeep

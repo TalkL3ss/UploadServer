@@ -47,9 +47,17 @@ class FileServer implements MessageComponentInterface {
             }
         } elseif (isset($data['filename']) && isset($data['filedata'])) {
             // Save uploaded file
-            $filePath = 'uploads/' . basename($data['filename']);
+            $filename = basename($data['filename']);
+            
+            // If username is provided, prefix the filename with username
+            if (isset($data['username']) && !empty($data['username'])) {
+                $safeUsername = preg_replace('/[^a-zA-Z0-9_-]/', '', $data['username']);
+                $filename = $safeUsername . '_' . $filename;
+            }
+            
+            $filePath = 'uploads/' . $filename;
             file_put_contents($filePath, base64_decode($data['filedata']));
-            $from->send(json_encode(["status" => "success", "message" => "File saved!"]));
+            $from->send(json_encode(["status" => "success", "message" => "File saved as: " . $filename]));
         } else {
             $from->send(json_encode(["status" => "error", "message" => "Invalid request."]));
         }
