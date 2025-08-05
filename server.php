@@ -5,7 +5,7 @@ use Ratchet\ConnectionInterface;
 require 'vendor/autoload.php';
 
 class FileServer implements MessageComponentInterface {
-    private $password = "securepassword"; // Default password
+    private $password = "securepassword";
     protected $clients;
 
     public function __construct() {
